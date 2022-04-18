@@ -1,0 +1,35 @@
+{
+    "sensors": 
+    [
+        {
+            "name": "pir_sensor_1",
+            "type": "pir",
+            "connection-type": "rest",
+            "rest-address": "192.168.1.10"
+        },
+        {
+            "name": "pir_sensor_2",
+            "type": "pir",
+            "connection-type": "rest",
+            "rest-address": "192.168.1.11"
+        },
+        {
+            "name": "siren_1",
+            "type": "siren",
+            "connection-type": "pin",
+            "pin-number": "1"
+        },
+        {
+            "name": "strobe_1",
+            "type": "strobe",
+            "connection-type": "pin",
+            "pin-number": "2"
+        },
+        {
+            "name": "front_door_lock",
+            "type": "lock",
+            "connection-type": "rest",
+            "rest-address": "192.168.1.12"
+        }
+    ]
+}

@@ -1,0 +1,25 @@
+{
+    "name": "security-server",
+    "version": "0.0.0",
+    "scripts": {
+        "prebuild": "npm install",
+        "compile": "tsc -p ./tsconfig.server.json",
+        "postbuild": "cp ./package*.json ./dist/ ; cd ./dist ; npm ci --production",
+        "build": "npm run prebuild ; npm run compile ; npm run postbuild",
+        "clean": "rm -r dist ; rm -r node_modules",
+        "start": "docker-compose up -d",
+        "stop": "docker-compose down",
+        "generate": "graphql-codegen --config codegen.yml",
+        "database:drop-tables": "docker volume rm $(docker volume ls -q)",
+        "dev": "npm install ; tsc -p ./src/server/tsconfig.server.json; docker build --tag dev-node-docker -f ./scripts/Dev.Dockerfile ./ ; docker-compose -f docker-compose.yaml -f docker-compose.dev.yaml up -d ; concurrently -k \"tsc -p ./src/server/tsconfig.server.json -w\" \"webpack --config ./src/client/webpack.config.js --mode development --watch\"",
+        "test": "jest"
+    },
+    "private": true,
+    "dependencies": {
+        "express": "^4.17.3",
+        "onoff": "^6.0.3"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.13"
+    }
+}
