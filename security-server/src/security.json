@@ -1,33 +1,36 @@
 {
+    "high-alert-timeout-seconds": 30,
+    "break-timout-seconds": 300,
+    "recovery-timeout-hours": 10,
     "sensors": 
     [
         {
             "name": "pir_sensor_1",
-            "type": "pir",
+            "model": "pir",
             "connection-type": "rest",
             "rest-address": "192.168.1.10"
         },
         {
             "name": "pir_sensor_2",
-            "type": "pir",
+            "model": "pir",
             "connection-type": "rest",
             "rest-address": "192.168.1.11"
         },
         {
             "name": "siren_1",
-            "type": "siren",
+            "model": "siren",
             "connection-type": "pin",
             "pin-number": "1"
         },
         {
             "name": "strobe_1",
-            "type": "strobe",
+            "model": "strobe",
             "connection-type": "pin",
             "pin-number": "2"
         },
         {
             "name": "front_door_lock",
-            "type": "lock",
+            "model": "lock",
             "connection-type": "rest",
             "rest-address": "192.168.1.12"
         }

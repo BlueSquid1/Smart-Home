@@ -1,13 +1,25 @@
+import * as express from 'express';
+
+import * as securityMgr from './security-mgr';
+
 export class App
 {
-    private securityMgr : SecurityMgr;
+    public constructor(server : express.Express) {
+        this.securityMgr = new securityMgr.SecurityMgr(server);
+    }
 
-    public init() : void;
+    public init() : void {
+        const securityFilePath = "./security.json";
+        this.securityMgr.initalize(securityFilePath);
+    }
 
-    public run() : void;
+    public armHouse() {
+        this.securityMgr.armHouse();
+    }
 
-    public shutdown() : void;
+    public unarmHouse() {
+        this.securityMgr.unarmHouse();
+    }
 
-private:
-    refreshAjex() : void;
+    private securityMgr : securityMgr.SecurityMgr;
 }

@@ -1,13 +1,23 @@
 import * as express from 'express';
 
-const app = express.default();
+import * as app from './app';
 
-const port = 3000
+const server = express.default();
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+const securityApp = new app.App(server);
+securityApp.init();
 
-app.listen(port, () => {
+server.get('/api/arm', (req, res) => {
+  securityApp.armHouse();
+  res.send('armed house');
+});
+
+server.get('/api/unarm', (req, res) => {
+  securityApp.unarmHouse();
+  res.send('unarmed house');
+});
+
+const port = 3000;
+server.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })

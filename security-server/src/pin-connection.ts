@@ -5,9 +5,9 @@ import * as isensor from './sensor';
 
 export class PinConnection implements iconnection.IConnection {
 
-    public constructor(pinNum : number, direction : onoff.Direction, stateChange ?: iconnection.CallbackType) {
+    public constructor(pinNum : number, direction : onoff.Direction) {
         this.status = "untriggered";
-        this.callback = stateChange;
+        this.callback = undefined;
         this.direction = direction;
 
         if(direction == 'in') {
@@ -27,7 +27,11 @@ export class PinConnection implements iconnection.IConnection {
         reg.register(this, this.pin);
     }
 
-    public SendStatus(newState : iconnection.Status) : boolean {
+    statusChangeEvent(stateChange : iconnection.CallbackType) : void {
+        this.callback = stateChange;
+    }
+
+    public sendStatus(newState : iconnection.Status) : boolean {
         if(this.direction === 'in')
         {
             return false;

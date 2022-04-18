@@ -6,7 +6,9 @@ export type CallbackType = (curState : Status, oldState : Status) => void;
 
 export interface IConnection
 {
-    SendStatus(newState : Status) : boolean;
+    statusChangeEvent(stateChange : CallbackType) : void;
+
+    sendStatus(newState : Status) : boolean;
 
     getStatus() : Status;
 }

@@ -5,16 +5,20 @@ import * as iconnection from './iconnection';
 
 export class RestConnection implements iconnection.IConnection {
 
-    public constructor(server : Express, sensorUrl : string, stateChange ?: iconnection.CallbackType) {
+    public constructor(server : Express, sensorUrl : string) {
         this.status = "disconnected";
-        this.callback = stateChange;
+        this.callback = undefined;
 
         server.get("/api/sensor/" + sensorUrl, (req : Request, res : Response) => {
             this.statusHandler(req, res);
         });
     }
 
-    public SendStatus(newState : iconnection.Status) : boolean {
+    statusChangeEvent(stateChange : iconnection.CallbackType) : void {
+        this.callback = stateChange;
+    }
+
+    public sendStatus(newState : iconnection.Status) : boolean {
         //TODO
         return false;
     }
