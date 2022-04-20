@@ -11,8 +11,8 @@ export class Sensor {
         this.connection = connection;
 
         // Give it a default status handlers so all changes can be logged.
-        this.StatusChangeEvent( (sensor : Sensor, curState : iconnection.Status, oldState : iconnection.Status) => {
-            this.defaultStatusListener(sensor, curState, oldState);
+        this.listenToStatusChange( (sensor : Sensor, curState : iconnection.Status, oldState : iconnection.Status) => {
+            console.log("sensor: " + sensor.getName() + " state changed from: " + oldState + " to new state: " + curState);
         });
     }
 
@@ -31,14 +31,10 @@ export class Sensor {
         return this.connection.sendStatus(newState);
     }
 
-    public StatusChangeEvent(stateChange : CallbackType) : void {
-        this.connection.statusChangeEvent((curState : iconnection.Status, oldState : iconnection.Status)=> {
-            stateChange(this, curState, oldState);
+    public listenToStatusChange(stateChange : CallbackType) : void {
+        this.connection.listenToStatusChange((states : iconnection.StatusArgs)=> {
+            stateChange(this, states.curState, states.oldState);
         });
-    }
-
-    private defaultStatusListener(sensor : Sensor, curState : iconnection.Status, oldState : iconnection.Status) {
-        console.log("sensor: " + sensor.getName() + "state changed from: " + oldState + " to new state: " + curState)
     }
 
     private name : string;

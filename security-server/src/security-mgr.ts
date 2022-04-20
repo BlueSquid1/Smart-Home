@@ -17,7 +17,7 @@ export class SecurityMgr
 
         // Hook up the callbacks that can trigger the alarm
         for(let sensor of this.sensors) {
-            sensor.StatusChangeEvent((sensor : sensor.Sensor, curState : iconnection.Status, oldState : iconnection.Status) => {
+            sensor.listenToStatusChange((sensor : sensor.Sensor, curState : iconnection.Status, oldState : iconnection.Status) => {
                 this.securityEvent(sensor, curState, oldState);
             });
         }
@@ -25,10 +25,12 @@ export class SecurityMgr
 
     public armHouse() {
         this.status = 'armed';
+        console.log("armed house");
     }
 
     public unarmHouse() {
         this.status = 'unarmed';
+        console.log("unarmed house");
     }
 
     private securityEvent(sensor : sensor.Sensor, curState : iconnection.Status, oldState : iconnection.Status) {
@@ -63,7 +65,7 @@ export class SecurityMgr
 
     private handleHighAlert() {
         if(this.status !== 'high-alert') {
-            console.log("no longer in high alert. false alarm.");
+            console.log("no longer in high alert. No further action.");
             return;
         }
 

@@ -1,4 +1,5 @@
 import * as express from 'express';
+import * as path from 'path';
 
 import * as securityMgr from './security-mgr';
 
@@ -9,7 +10,7 @@ export class App
     }
 
     public init() : void {
-        const securityFilePath = "./security.json";
+        const securityFilePath = path.join(__dirname, 'security.json');
         this.securityMgr.initalize(securityFilePath);
     }
 

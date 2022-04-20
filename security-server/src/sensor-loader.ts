@@ -23,8 +23,8 @@ export class SensorLoader {
             const connectionType = sensorSetting['connection-type'];
             let connection : iconnection.IConnection;
             if(connectionType === 'rest') {
-                const ipAddress = sensorSetting['rest-address'];
-                connection = new restConnection.RestConnection(server, ipAddress);
+                const restName = sensorSetting['rest-name'];
+                connection = new restConnection.RestConnection(server, restName);
             } else if(connectionType === 'pin') {
                 const pinNum = sensorSetting['pin-number'];
                 let pinDirection : onoff.Direction = 'in';

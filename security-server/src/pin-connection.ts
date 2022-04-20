@@ -1,13 +1,12 @@
 import * as onoff from 'onoff';
 
 import * as iconnection from './iconnection';
-import * as isensor from './sensor';
 
-export class PinConnection implements iconnection.IConnection {
+export class PinConnection extends iconnection.IConnection {
 
     public constructor(pinNum : number, direction : onoff.Direction) {
+        super();
         this.status = "untriggered";
-        this.callback = undefined;
         this.direction = direction;
 
         if(direction == 'in') {
@@ -25,10 +24,6 @@ export class PinConnection implements iconnection.IConnection {
             pin.unexport();
         });
         reg.register(this, this.pin);
-    }
-
-    statusChangeEvent(stateChange : iconnection.CallbackType) : void {
-        this.callback = stateChange;
     }
 
     public sendStatus(newState : iconnection.Status) : boolean {
@@ -56,9 +51,7 @@ export class PinConnection implements iconnection.IConnection {
         if(this.status !== newStatus) {
             const oldStatus = this.status;
             this.status = newStatus;
-            if(this.callback) {
-                this.callback(newStatus, oldStatus);
-            }
+            this.callback.trigger({curState: newStatus, oldState: oldStatus});
         }
     }
 
@@ -66,6 +59,4 @@ export class PinConnection implements iconnection.IConnection {
 
     private pin : onoff.Gpio;
     private direction : onoff.Direction;
-
-    private callback : iconnection.CallbackType | undefined;
 }

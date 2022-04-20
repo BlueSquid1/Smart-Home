@@ -1,14 +1,25 @@
-import * as isensor from './sensor'
+import * as liteEvent from './LiteEvent';
 
 export type Status = "disconnected" | "triggered" | "untriggered";
 
-export type CallbackType = (curState : Status, oldState : Status) => void;
+export type StatusArgs = { curState : Status, oldState : Status };
 
-export interface IConnection
+export type CallbackType = (states : StatusArgs) => void;
+
+export abstract class IConnection
 {
-    statusChangeEvent(stateChange : CallbackType) : void;
+    constructor() {
+        this.callback = new liteEvent.LiteEvent<StatusArgs>();
+    }
 
-    sendStatus(newState : Status) : boolean;
+    public listenToStatusChange(stateChange : CallbackType) : void {
+        this.callback.add(stateChange);
+    }
 
-    getStatus() : Status;
+    public abstract sendStatus(newState : Status) : boolean;
+
+    public abstract getStatus() : Status;
+
+
+    protected callback : liteEvent.LiteEvent<StatusArgs>;
 }
