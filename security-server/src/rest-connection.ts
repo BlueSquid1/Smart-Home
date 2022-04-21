@@ -9,7 +9,14 @@ export class RestConnection extends iconnection.IConnection {
         this.status = "disconnected";
 
         server.get("/api/sensor/" + sensorUrl, (req : Request, res : Response) => {
-            this.statusHandler(req, res);
+            const result = this.statusHandler(req, res);
+            if(result) {
+                res.sendStatus(200);
+            }
+            else
+            {
+                res.sendStatus(500);
+            }
         });
     }
 
@@ -22,14 +29,14 @@ export class RestConnection extends iconnection.IConnection {
         return this.status;
     }
 
-    private statusHandler(req : Request, res : Response) : void {
+    private statusHandler(req : Request, res : Response) : boolean {
         const newStatus = <iconnection.Status>req.query['status'];
         if(this.status !== newStatus) {
             const oldStatus = this.status;
             this.status = newStatus;
             this.callback.trigger({curState: newStatus, oldState: oldStatus});
         }
-        res.sendStatus(200);
+        return true;
     }
 
     private status : iconnection.Status; // e.g. disconnected, triggered, untriggered etc

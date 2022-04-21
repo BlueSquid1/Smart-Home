@@ -1,7 +1,7 @@
 {
-    "high-alert-timeout-seconds": 30,
-    "break-timout-seconds": 300,
-    "recovery-timeout-hours": 10,
+    "high-alert-duration-seconds": 30.0,
+    "breach-duration-seconds": 300.0,
+    "recovery-duration-hours": 10.0,
     "sensors": 
     [
         {

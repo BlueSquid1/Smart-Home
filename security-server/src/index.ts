@@ -1,23 +1,29 @@
 import * as express from 'express';
+import * as path from 'path';
 
-import * as app from './app';
+import * as securityMgr from './security-mgr';
 
-const server = express.default();
+const app = express.default();
 
-const securityApp = new app.App(server);
-securityApp.init();
+const securityApp = new securityMgr.SecurityMgr(app);
+const securityFilePath = path.join(__dirname, 'security.json');
+const result = securityApp.initalize(securityFilePath);
+if(!result) {
+  console.log("failed to initalise. Shutting down.");
+  process.exit(1);
+}
 
-server.get('/api/arm', (req, res) => {
+app.get('/api/arm', (req, res) => {
   securityApp.armHouse();
   res.send('armed house');
 });
 
-server.get('/api/unarm', (req, res) => {
+app.get('/api/unarm', (req, res) => {
   securityApp.unarmHouse();
   res.send('unarmed house');
 });
 
-const port = 3000;
-server.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+const port = 80;
+app.listen(port, () => {
+  console.log(`Security server is up on ${port}`)
+});

@@ -7,15 +7,27 @@ import * as pinConnection from './pin-connection';
 import * as restConnection from './rest-connection';
 import * as iconnection from './iconnection';
 
+export class SecuritySettings
+{
+    sensors: sensor.Sensor[] = [];
+    highAlertDurationSeconds: number = 0.0;
+    breachDurationSeconds: number = 0.0;
+    recoveryDurationHours: number = 0.0;
+}
+
 
 export class SensorLoader {
-    public static loadFromJson(server : express.Express, jsonFile : string) : sensor.Sensor[] {
+    public static loadFromJson(server : express.Express, jsonFile : string) : SecuritySettings | undefined {
         const fileString = fs.readFileSync(jsonFile, 'utf8');
         const fileSettings = JSON.parse(fileString);
 
         const sensorSettings = fileSettings['sensors'];
 
-        let sensors : sensor.Sensor[] = [];
+        let secSettings = new SecuritySettings();
+
+        secSettings.highAlertDurationSeconds = fileSettings['high-alert-duration-seconds'];
+        secSettings.breachDurationSeconds = fileSettings['breach-duration-seconds'];
+        secSettings.recoveryDurationHours = fileSettings['recovery-duration-hours'];
 
         for(let sensorSetting of sensorSettings) {
             const name = sensorSetting['name'];
@@ -39,10 +51,11 @@ export class SensorLoader {
             }
             else
             {
-                return [];
+                console.log("unknown connection type");
+                return undefined;
             }
-            sensors.push(new sensor.Sensor(name, type, connection))           
+            secSettings.sensors.push(new sensor.Sensor(name, type, connection))           
         }
-        return sensors;
+        return secSettings;
     }
 }

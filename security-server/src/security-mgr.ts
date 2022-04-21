@@ -1,26 +1,33 @@
 import * as express from 'express';
 
 import * as sensor from './sensor';
-import * as sensorLoader from './sensor-loader';
+import * as securityLoader from './security-loader';
 import * as iconnection from './iconnection';
 
 export class SecurityMgr
 {
     public constructor(server : express.Express) {
-        this.sensors = [];
         this.server = server;
         this.status = 'unarmed';
+        this.secConfig = new securityLoader.SecuritySettings();
     }
 
-    public initalize(settingsFile : string) {
-        this.sensors = sensorLoader.SensorLoader.loadFromJson(this.server, settingsFile);
+    public initalize(settingsFile : string) : boolean {
+        const configResults = securityLoader.SensorLoader.loadFromJson(this.server, settingsFile);
+
+        if(!configResults) {
+            return false;
+        }
+
+        this.secConfig = configResults;
 
         // Hook up the callbacks that can trigger the alarm
-        for(let sensor of this.sensors) {
+        for(let sensor of this.secConfig.sensors) {
             sensor.listenToStatusChange((sensor : sensor.Sensor, curState : iconnection.Status, oldState : iconnection.Status) => {
                 this.securityEvent(sensor, curState, oldState);
             });
         }
+        return true;
     }
 
     public armHouse() {
@@ -46,7 +53,7 @@ export class SecurityMgr
                         console.log("A pir was triggered. Going to high alert.");
                         this.status = 'high-alert';
                         //start timer
-                        setTimeout(() => { this.handleHighAlert() }, 30000);
+                        setTimeout(() => { this.handleHighAlert() }, this.secConfig.highAlertDurationSeconds * 1000);
                     }
                 }
                 break;
@@ -79,14 +86,14 @@ export class SecurityMgr
         this.status = 'breached';
 
         // Invoking the sirens.
-        const sirens = this.sensors.filter( sensor => sensor.getModel() === 'siren');
+        const sirens = this.secConfig.sensors.filter( sensor => sensor.getModel() === 'siren');
         sirens.forEach( siren => siren.sendStatus('triggered'));
 
         // Invoke strobe lights.
-        const strobes = this.sensors.filter( sensor => sensor.getModel() == 'strobe' );
+        const strobes = this.secConfig.sensors.filter( sensor => sensor.getModel() == 'strobe' );
         strobes.forEach( strobe => strobe.sendStatus('triggered') );
 
-        setTimeout(() => { this.handleRecover() }, 5 * 60 * 1000);
+        setTimeout(() => { this.handleRecover() }, this.secConfig.highAlertDurationSeconds * 1000);
     }
 
     private handleRecover() {
@@ -94,14 +101,14 @@ export class SecurityMgr
         this.status = 'recovery';
 
         // Turn off sirens.
-        const sirens = this.sensors.filter( sensor => sensor.getModel() === 'siren');
+        const sirens = this.secConfig.sensors.filter( sensor => sensor.getModel() === 'siren');
         sirens.forEach( siren => siren.sendStatus('untriggered'));
 
         // Turn off strobe lights.
-        const strobes = this.sensors.filter( sensor => sensor.getModel() == 'strobe' );
+        const strobes = this.secConfig.sensors.filter( sensor => sensor.getModel() == 'strobe' );
         strobes.forEach( strobe => strobe.sendStatus('untriggered') );
 
-        setTimeout(() => { this.handlePostRecovery() }, 10 * 60 * 60 * 1000);
+        setTimeout(() => { this.handlePostRecovery() }, this.secConfig.recoveryDurationHours * 60 * 60 * 1000);
     }
 
     private handlePostRecovery() {
@@ -111,7 +118,7 @@ export class SecurityMgr
         }
     }
 
-    private sensors : sensor.Sensor[];
+    private secConfig : securityLoader.SecuritySettings;
     private status : 'unarmed' | 'armed' | 'breached' | 'high-alert' | 'recovery';
 
     private server : express.Express;
