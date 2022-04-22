@@ -4,6 +4,7 @@
       "baseUrl": "./",
       "forceConsistentCasingInFileNames": true,
       "strict": true,
+      "noImplicitAny": true,
       "noImplicitOverride": true,
       "noPropertyAccessFromIndexSignature": true,
       "noImplicitReturns": true,

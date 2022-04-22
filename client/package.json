@@ -1,0 +1,26 @@
+{
+  "name": "client",
+  "version": "1.0.0",
+  "scripts": {
+    "prebuild": "npm install",
+    "compile": "webpack --config ./webpack.config.js",
+    "postbuild": "",
+    "build": "npm run prebuild ; npm run compile ; npm run postbuild",
+    "start": "http-server ./dist"
+  },
+  "dependencies": {
+    "http-server": "^14.1.0",
+    "react": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.6",
+    "@types/react-dom": "^18.0.2",
+    "css-loader": "^6.7.1",
+    "html-webpack-plugin": "^5.5.0",
+    "react-dom": "^18.0.0",
+    "style-loader": "^3.3.1",
+    "ts-loader": "^9.2.8",
+    "webpack": "^5.72.0",
+    "webpack-cli": "^4.9.2"
+  }
+}
