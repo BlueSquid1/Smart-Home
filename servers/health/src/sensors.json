@@ -1,0 +1,23 @@
+[
+    {
+        "name": "PIR Sensor 1",
+        "model": "pir",
+        "connection-type": "rest",
+        "rest-name": "pir_sensor_1",
+        "rest-address": "192.168.1.200"
+    },
+    {
+        "name": "PIR Sensor 2",
+        "model": "pir",
+        "connection-type": "rest",
+        "rest-name": "pir_sensor_2",
+        "rest-address": "192.168.1.201"
+    },
+    {
+        "name": "Front Door Lock",
+        "model": "lock",
+        "connection-type": "rest",
+        "rest-name": "front_door_1",
+        "rest-address": "192.168.1.202"
+    }
+]

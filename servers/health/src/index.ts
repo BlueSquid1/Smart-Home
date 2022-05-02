@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as path from 'path';
 
-import * as securityMgr from './security-mgr';
+import * as healthMgr from './health-mgr';
 
 const app = express.default();
 

@@ -13,6 +13,7 @@ export class SecuritySettings
     highAlertDurationSeconds: number = 0.0;
     breachDurationSeconds: number = 0.0;
     recoveryDurationHours: number = 0.0;
+    armingDurationSeconds: number = 0.0;
 }
 
 
@@ -20,7 +21,7 @@ export class SensorLoader {
     public static loadFromJson(server : express.Express, jsonFile : string) : SecuritySettings | undefined {
         const fileString = fs.readFileSync(jsonFile, 'utf8');
         const fileSettings = JSON.parse(fileString);
-
+        
         const sensorSettings = fileSettings['sensors'];
 
         let secSettings = new SecuritySettings();
@@ -28,6 +29,7 @@ export class SensorLoader {
         secSettings.highAlertDurationSeconds = fileSettings['high-alert-duration-seconds'];
         secSettings.breachDurationSeconds = fileSettings['breach-duration-seconds'];
         secSettings.recoveryDurationHours = fileSettings['recovery-duration-hours'];
+        secSettings.armingDurationSeconds = fileSettings['arming-house-duration-seconds'];
 
         for(let sensorSetting of sensorSettings) {
             const name = sensorSetting['name'];

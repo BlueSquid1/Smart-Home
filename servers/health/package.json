@@ -1,0 +1,20 @@
+{
+    "name": "server-health",
+    "version": "1.0.0",
+    "scripts": {
+        "prebuild": "npm install",
+        "compile": "tsc -p ./tsconfig.health.json",
+        "postbuild": "cp ./package*.json ./dist/ ; cd ./dist ; npm ci --production",
+        "build": "npm run prebuild ; npm run compile ; npm run postbuild",
+        "clean": "rm -r dist ; rm -r node_modules"
+    },
+    "dependencies": {
+        "express": "^4.17.3",
+        "onoff": "^6.0.3",
+        "path": "^0.12.7"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.13",
+        "@types/node": "^17.0.31"
+    }
+}

@@ -9,6 +9,7 @@ export class SecurityMgr
     public constructor(server : express.Express) {
         this.server = server;
         this.status = 'unarmed';
+        this.armingTimeout = undefined;
         this.secConfig = new securityLoader.SecuritySettings();
     }
 
@@ -31,12 +32,18 @@ export class SecurityMgr
     }
 
     public armHouse() {
-        this.status = 'armed';
-        console.log("armed house");
+        this.status = 'arming';
+        console.log("arming house");
+        this.armingTimeout = setTimeout(() => { this.handleArmingHouse() }, this.secConfig.armingDurationSeconds * 1000);
     }
 
     public unarmHouse() {
         this.status = 'unarmed';
+        if(this.armingTimeout) {
+            console.log("clearing untrifggered arming timeout");
+            clearTimeout(this.armingTimeout);
+            this.armingTimeout = undefined;
+        }
         console.log("unarmed house");
     }
 
@@ -54,15 +61,6 @@ export class SecurityMgr
                         this.status = 'high-alert';
                         //start timer
                         setTimeout(() => { this.handleHighAlert() }, this.secConfig.highAlertDurationSeconds * 1000);
-                    }
-                }
-                break;
-            }
-            case 'high-alert': {
-                if(sensor.getModel() === 'pir') {
-                    if(curState === 'disconnected') {
-                        console.log("A PIR was disconnected on high alert. Too sus. Going to breached.");
-                        this.handleBreached();
                     }
                 }
                 break;
@@ -118,8 +116,17 @@ export class SecurityMgr
         }
     }
 
+    private handleArmingHouse() {
+        if(this.status === 'arming') {
+            console.log("armed house");
+            this.status = 'armed';
+        }
+        this.armingTimeout = undefined;
+    }
+
     private secConfig : securityLoader.SecuritySettings;
-    private status : 'unarmed' | 'armed' | 'breached' | 'high-alert' | 'recovery';
+    private status : 'unarmed' | 'arming' | 'armed' | 'breached' | 'high-alert' | 'recovery';
+    private armingTimeout : NodeJS.Timeout | undefined;
 
     private server : express.Express;
 }
