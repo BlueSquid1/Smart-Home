@@ -9,6 +9,7 @@
 
 #files that contain secret keys
 .env
+**/*secret*.h
 
 # dependencies
 **/node_modules
