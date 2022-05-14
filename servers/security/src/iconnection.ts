@@ -1,6 +1,6 @@
 import * as liteEvent from './LiteEvent';
 
-export type Status = "disconnected" | "triggered" | "untriggered";
+export type Status = "disconnected" | "triggered" | "untriggered" | "connected";
 
 export type StatusArgs = { curState : Status, oldState : Status };
 
