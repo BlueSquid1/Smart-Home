@@ -10,6 +10,7 @@ export class SecurityMgr
         this.server = server;
         this.status = 'unarmed';
         this.armingTimeout = undefined;
+        this.testMode = false;
         this.secConfig = new securityLoader.SecuritySettings();
     }
 
@@ -45,6 +46,14 @@ export class SecurityMgr
             this.armingTimeout = undefined;
         }
         console.log("unarmed house");
+    }
+
+    public setTestMode(testMode : boolean) : void {
+        this.testMode = testMode;
+    }
+
+    public getTestMode() : boolean {
+        return this.testMode;
     }
 
     private securityEvent(sensor : sensor.Sensor, curState : iconnection.Status, oldState : iconnection.Status) {
@@ -83,9 +92,11 @@ export class SecurityMgr
 
         this.status = 'breached';
 
-        // Invoking the sirens.
-        const sirens = this.secConfig.sensors.filter( sensor => sensor.getModel() === 'siren');
-        sirens.forEach( siren => siren.sendStatus('triggered'));
+        // Invoking the sirens if not in test mode.
+        if(!this.testMode) {
+            const sirens = this.secConfig.sensors.filter( sensor => sensor.getModel() === 'siren');
+            sirens.forEach( siren => siren.sendStatus('triggered'));
+        }
 
         // Invoke strobe lights.
         const strobes = this.secConfig.sensors.filter( sensor => sensor.getModel() == 'strobe' );
@@ -127,6 +138,7 @@ export class SecurityMgr
     private secConfig : securityLoader.SecuritySettings;
     private status : 'unarmed' | 'arming' | 'armed' | 'breached' | 'high-alert' | 'recovery';
     private armingTimeout : NodeJS.Timeout | undefined;
+    private testMode : boolean;
 
     private server : express.Express;
 }

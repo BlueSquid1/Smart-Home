@@ -23,6 +23,16 @@ app.get('/api/unarm', (req, res) => {
     res.send('unarmed house');
 });
 
+app.get('/api/testMode', (req, res) => {
+    const isEnabled = securityApp.getTestMode();
+    res.send('test mode to: ' + isEnabled);
+});
+
+app.get('/api/testMode/:isEnabled', (req, res) => {
+    const isEnabled = Boolean(Number(req.params['isEnabled']));
+    securityApp.setTestMode(isEnabled);
+    res.send('set test mode to: ' + isEnabled);
+});
 
 // Last non-error route is used to detected 404 errors
 app.use(function(req, res, next){
