@@ -14,16 +14,16 @@ private:
 
 public:
     ~Pir();
-    bool Init(const String& ssid, const String& password, const String& outgoingClientUrl, int pirPowerPin, int pirReadingPin, int ledPin);
+    bool Init(const String& uniqueSensorName, const String& uniqueIpAddress, const String& ssid, const String& password, const String& outgoingClientUrl, int pirPowerPin, int pirReadingPin, int ledPin);
 
     bool Process();
 
 private:
     void SendStatusChange(const String& newStatus);
-    
+
     bool InitHardware();
 
-    bool ConnectWifi(const String& ssid, const String& password);
+    bool ConnectWifi(const String& uniqueIpAddress, const String& ssid, const String& password);
 
     void RestartPir();
 
@@ -49,6 +49,8 @@ private:
     int ledPin;
 
     String outgoingClientUrl;
+
+    String uniqueSensorName;
 
     WiFiServer * incomingServer = nullptr;
     WiFiClient * outgoingClient = nullptr;

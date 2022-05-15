@@ -24,7 +24,8 @@ Pir::~Pir()
     }
 }
 
-bool Pir::Init(const String& ssid, const String& password, const String& outgoingClientUrl, int pirPowerPin, int pirReadingPin, int ledPin) {
+bool Pir::Init(const String& uniqueSensorName, const String& uniqueIpAddress, const String& ssid, const String& password, const String& outgoingClientUrl, int pirPowerPin, int pirReadingPin, int ledPin) {
+    this->uniqueSensorName = uniqueSensorName;
     this->outgoingClientUrl = outgoingClientUrl;
     this->pirPowerPin = pirPowerPin;
     this->pirReadingPin = pirReadingPin;
@@ -36,7 +37,11 @@ bool Pir::Init(const String& ssid, const String& password, const String& outgoin
     {
         return false;
     }
-    bool validSoftware = this->ConnectWifi(ssid, password);
+
+    Serial.print("Unique PIR sensor name: ");
+    Serial.println(this->uniqueSensorName);
+    
+    bool validSoftware = this->ConnectWifi(uniqueIpAddress, ssid, password);
     if(!validSoftware) 
     {
         return false;
@@ -82,7 +87,9 @@ void Pir::SendStatusChange(const String& newStatus)
         Serial.println("failed to report PIR");
         return;
     }
-    this->outgoingClient->print("GET /api/sensor/pir_sensor_1?status=");
+    this->outgoingClient->print("GET /api/sensor/");
+    this->outgoingClient->print(this->uniqueSensorName);
+    this->outgoingClient->print("?status=");
     this->outgoingClient->println(newStatus);
     this->outgoingClient->print("Host: ");
     this->outgoingClient->println(this->outgoingClientUrl);
@@ -122,14 +129,27 @@ bool Pir::InitHardware()
     return true;
 }
 
-bool Pir::ConnectWifi(const String& ssid, const String& password)
+bool Pir::ConnectWifi(const String& uniqueIpAddress, const String& ssid, const String& password)
 {
     Serial.print("Attempting to connect to network: ");
-    Serial.println(ssid);
+    Serial.print(ssid);
+    Serial.print(", with IP address: ");
+    Serial.println(uniqueIpAddress);
 
+    IPAddress localIp;
+    bool parseResult = localIp.fromString(uniqueIpAddress);
+
+    if(!parseResult)
+    {
+        Serial.print("failed to parse: ");
+        Serial.println(uniqueIpAddress);
+        return false;
+    }
+
+    WiFi.config(localIp);
     int status = WiFi.begin(ssid, password);
 
-    while (status != WL_CONNECTED) 
+    while (status != WL_CONNECTED)
     {
          // wait 10 seconds
         delay(10000);
