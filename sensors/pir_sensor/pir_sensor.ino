@@ -21,18 +21,6 @@ void exit()
     while(true);
 }
 
-void HandlePirChange() 
-{
-    if(digitalRead(PIR_READING_PIN) == HIGH)
-    {
-        pir.SendStatusChange("triggered");
-    }
-    else
-    {
-        pir.SendStatusChange("untriggered");
-    }
-}
-
 void setup() 
 {
     if(!pir.Init(SSID, PASS, OUTGOING_CLIENT_URL, PIR_POWER_PIN, PIR_READING_PIN, LED_PIN))
@@ -40,14 +28,16 @@ void setup()
         exit();
     }
 
-    attachInterrupt(digitalPinToInterrupt(PIR_READING_PIN), HandlePirChange, CHANGE);
-
     Serial.println("Setup complete");
 }
 
 void loop() 
 {
-    pir.HandleServer();
+    bool processResult = pir.Process();
+    if(processResult == false)
+    {
+        Serial.println("PIR processing failed.");
+    }
 
     //sleep for 20ms
     delay(20);

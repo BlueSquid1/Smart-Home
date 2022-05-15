@@ -16,24 +16,30 @@ public:
     ~Pir();
     bool Init(const String& ssid, const String& password, const String& outgoingClientUrl, int pirPowerPin, int pirReadingPin, int ledPin);
 
-    bool HandleServer();
-
-    void SendStatusChange(const String& newStatus);
+    bool Process();
 
 private:
+    void SendStatusChange(const String& newStatus);
+    
     bool InitHardware();
 
     bool ConnectWifi(const String& ssid, const String& password);
 
     void RestartPir();
 
-    void PrintWifiStatus();
+    void PrintWifiStatus() const;
 
     String ReadHttpRequest(WiFiClient client);
 
     int FindCharInString(const String& text);
 
     HttpResponse ProcessIncomingRequest(const String& requestArg);
+
+    HttpResponse ProcessStatusRequest();
+
+    bool ProcessServer();
+
+    bool ProcessPirSensor();
 
     // PIR power pin
     int pirPowerPin;
@@ -48,4 +54,8 @@ private:
     WiFiClient * outgoingClient = nullptr;
 
     bool restartScheduled = false;
+
+    uint64_t stateChangeTimeStampMs;
+
+    String curState;
 };

@@ -29,6 +29,7 @@ bool Pir::Init(const String& ssid, const String& password, const String& outgoin
     this->pirPowerPin = pirPowerPin;
     this->pirReadingPin = pirReadingPin;
     this->ledPin = ledPin;
+    this->stateChangeTimeStampMs = millis();
 
     bool validHardware = this->InitHardware();
     if(!validHardware) 
@@ -43,69 +44,52 @@ bool Pir::Init(const String& ssid, const String& password, const String& outgoin
     return true;
 }
 
-bool Pir::HandleServer()
+bool Pir::Process()
 {
-    // Block until a client connects
-    WiFiClient client = this->incomingServer->available();
-    if(client) 
+    // Check if the PIR value pin has changed
+    bool pirProcessing = this->ProcessPirSensor();
+    if(pirProcessing == false)
     {
-        Serial.println("reading connection");
-        
-        //Read the entire request
-        String request = this->ReadHttpRequest(client);
-        if(request.length() == 0)
-        {
-            Serial.println("failed to read incoming http request");
-            return false;
-        }
-
-        bool isGetRequest = request.startsWith("GET /");
-        if(!isGetRequest)
-        {
-            Serial.println("not a GET request");
-            return false;
-        }
-
-        // Cut off 'GET /'
-        String cutRequest = request.substring(5);
-
-        // Read word until ' '
-        int whiteSpaceIndex = this->FindCharInString(cutRequest);
-        if(whiteSpaceIndex < 0)
-        {
-            Serial.println("failed to find whitespace in request");
-            return false;
-        }
-
-        String requestArg = cutRequest.substring(0, whiteSpaceIndex);
-
-        Serial.println("processing request");
-        Pir::HttpResponse response = this->ProcessIncomingRequest(requestArg);
-
-        // Send response back
-        if(response.wasSuccessful) {
-            client.println("HTTP/1.1 200 OK");
-        } 
-        else 
-        {
-            client.println("HTTP/1.1 500 ERR");
-        }
-        client.println("Content-type:text/html");
-        client.println();
-
-        client.print(response.message);
-        
-        // end message with a blank line
-        client.println();
-
-        client.stop();
-        Serial.println("closed connection");
-
-        if(this->restartScheduled)
-        {
-            NVIC_SystemReset();
-        }
+        return false;
     }
+
+    bool serverProcessing = this->ProcessServer();
+    if(serverProcessing == false)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+void Pir::SendStatusChange(const String& newStatus) 
+{
+    if(this->curState == newStatus)
+    {
+        // Status has changed. Nothing left to do.
+        return;
+    }
+
+    this->stateChangeTimeStampMs = millis();
+    this->curState = newStatus;
+
+    Serial.print("status has changed to: ");
+    Serial.println(newStatus);
+
+    bool clientConnected = this->outgoingClient->connect(this->outgoingClientUrl.c_str(), ::HTTP_PORT);
+    if(!clientConnected) 
+    {
+        Serial.println("failed to report PIR");
+        return;
+    }
+    this->outgoingClient->print("GET /api/sensor/pir_sensor_1?status=");
+    this->outgoingClient->println(newStatus);
+    this->outgoingClient->print("Host: ");
+    this->outgoingClient->println(this->outgoingClientUrl);
+    this->outgoingClient->println("Connection: close");
+    this->outgoingClient->println();
+    this->outgoingClient->flush();
+    this->outgoingClient->stop();
 }
 
 bool Pir::InitHardware() 
@@ -161,7 +145,7 @@ bool Pir::ConnectWifi(const String& ssid, const String& password)
 
     this->outgoingClient = new WiFiClient();
 
-    this->SendStatusChange("connected");
+    this->SendStatusChange("started");
     return true;
 }
 
@@ -172,7 +156,7 @@ void Pir::RestartPir()
     digitalWrite(this->pirPowerPin, HIGH);
 }
 
-void Pir::PrintWifiStatus() 
+void Pir::PrintWifiStatus() const
 {
     Serial.println("Board Information:");
 
@@ -244,26 +228,6 @@ String Pir::ReadHttpRequest(WiFiClient client)
     return httpMethodString;
 }
 
-void Pir::SendStatusChange(const String& newStatus) 
-{
-    Serial.print("status has changed to: ");
-    Serial.println(newStatus);
-
-    bool clientConnected = this->outgoingClient->connect(this->outgoingClientUrl.c_str(), ::HTTP_PORT);
-    if(!clientConnected) 
-    {
-        Serial.println("failed to report PIR");
-        return;
-    }
-
-    this->outgoingClient->print("GET /api/sensor/pir_sensor_1?status=");
-    this->outgoingClient->println(newStatus);
-    this->outgoingClient->print("Host: ");
-    this->outgoingClient->println(this->outgoingClientUrl);
-    this->outgoingClient->println("Connection: close");
-    this->outgoingClient->println();
-}
-
 int Pir::FindCharInString(const String& text)
 {
     for(int i = 0; i < text.length(); ++i)
@@ -278,17 +242,137 @@ int Pir::FindCharInString(const String& text)
 
 Pir::HttpResponse Pir::ProcessIncomingRequest(const String& requestArg)
 {
-    Pir::HttpResponse response;
-    response.wasSuccessful = true;
-
     if(requestArg == "status")
     {
-        response.message = "hello";
+        return this->ProcessStatusRequest();
     }
     else if(requestArg == "restart")
     {
         Serial.println("restarting board");
         this->restartScheduled = true;
+
+        Pir::HttpResponse response;
+        response.wasSuccessful = true;
+        response.message = "restarting";
+        return response;
     }
+    else if(requestArg == "ledOn")
+    {
+        digitalWrite(this->ledPin, HIGH);
+        Pir::HttpResponse response;
+        response.wasSuccessful = true;
+        response.message = "LED on";
+        return response;
+    }
+    else if(requestArg == "ledOff")
+    {
+        digitalWrite(this->ledPin, LOW);
+        Pir::HttpResponse response;
+        response.wasSuccessful = true;
+        response.message = "LED off";
+        return response;
+    }
+
+    Pir::HttpResponse response;
+    response.wasSuccessful = false;
+    response.message = "unrecognised request";
     return response;
+}
+
+Pir::HttpResponse Pir::ProcessStatusRequest()
+{
+    uint64_t timeNow = millis();
+
+    uint64_t diffMs = timeNow - this->stateChangeTimeStampMs;
+
+    float diffSec = float(diffMs) / 1000.0f;
+
+    Pir::HttpResponse response;
+    response.wasSuccessful = true;
+    response.message = "{current_status: " + this->curState + ",\n last_state_change: " + String(diffSec, 1) + "}";
+
+    return response;
+}
+
+bool Pir::ProcessServer()
+{
+    // Check if a client wants to connect
+    WiFiClient client = this->incomingServer->available();
+    if(client) 
+    {
+        Serial.println("reading connection");
+        
+        //Read the entire request
+        String request = this->ReadHttpRequest(client);
+        if(request.length() == 0)
+        {
+            Serial.println("failed to read incoming http request");
+            return false;
+        }
+
+        bool isGetRequest = request.startsWith("GET /");
+        if(!isGetRequest)
+        {
+            Serial.println("not a GET request");
+            return false;
+        }
+
+        // Cut off 'GET /'
+        String cutRequest = request.substring(5);
+
+        // Read word until ' '
+        int whiteSpaceIndex = this->FindCharInString(cutRequest);
+        if(whiteSpaceIndex < 0)
+        {
+            Serial.println("failed to find whitespace in request");
+            return false;
+        }
+
+        String requestArg = cutRequest.substring(0, whiteSpaceIndex);
+
+        Serial.println("processing request");
+        Pir::HttpResponse response = this->ProcessIncomingRequest(requestArg);
+
+        // Send response back
+        if(response.wasSuccessful) {
+            client.println("HTTP/1.1 200 OK");
+        } 
+        else 
+        {
+            client.println("HTTP/1.1 500 ERR");
+        }
+        client.println("Content-type:text/html");
+        client.println();
+
+        client.print(response.message);
+        
+        // end message with a blank line
+        client.println();
+
+        client.flush();
+        client.stop();
+        Serial.println("closed connection");
+
+        if(this->restartScheduled)
+        {
+            // Wait a little before restarting so client gets response
+            delay(1000);
+            NVIC_SystemReset();
+        }
+    }
+
+    return true;
+}
+
+bool Pir::ProcessPirSensor()
+{
+    if(digitalRead(this->pirReadingPin) == HIGH)
+    {
+        this->SendStatusChange("triggered");
+    }
+    else
+    {
+        this->SendStatusChange("untriggered");
+    }
+    return true;
 }
